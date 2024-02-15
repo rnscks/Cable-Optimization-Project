@@ -21,18 +21,22 @@ class Cabinet:
                 corner_min=gp_Pnt(-200, -200, -200),
                 map_size=30)
         Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape) 
-        self.cables: List[Cable] = [self.get_cable(cable_name) for cable_name in self.cable_name_list]    
+        self.cables: List[Cable] = [self.get_cable(self.cable_name_list[0])]    
+        
     
-
     def get_cable(self, cable_name: str) -> Cable:
         cable_data = self.get_cable_data(cable_name)
         start_pnt, end_pnt = cable_data['start_point'], cable_data['end_point']
-        start_vec, end_vec = cable_data['start_vector'], cable_data['end_vector']   
+        start_vec, end_vec = cable_data['start_vector'], cable_data['end_vector'] 
+        middle_pnts = cable_data['middle_points']  
+        middle_pnts = [gp_Pnt(*pnt) for pnt in middle_pnts]
         cable = Cable()
 
         cable.set_start_terminal(start_pnt=gp_Pnt(*start_pnt), start_vec = start_vec, grids=self.grids)
         cable.set_goal_terminal(goal_pos=gp_Pnt(*end_pnt), goal_vec = end_vec, grids=self.grids)
-        cable.set_spline(diameter=1, grids=self.grids)
+        cable.set_intermediate_pnts(pnts=middle_pnts, grids=self.grids, diameter=1)   
+
+        #cable.set_spline(diameter=1, grids=self.grids)
         return cable
 
     def get_cable_data(self, cable_name):
@@ -93,3 +97,5 @@ class Cabinet:
             
         return cable_name_list 
     
+
+            

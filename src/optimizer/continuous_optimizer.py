@@ -56,7 +56,7 @@ class ACOR:
             print(f"number of fes: {fes}")
             print(f"fes: {self.archive[0, self.dim]}")
             if self.archive[0, self.dim] == 0.0:
-                print(self.archive)
+                #print(self.archive)
                 return self.archive[0, :self.dim]
             
             # initialize new population

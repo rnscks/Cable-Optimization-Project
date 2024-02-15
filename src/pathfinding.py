@@ -32,6 +32,106 @@ class GridAlgorithm:
         
         return distance_sum
 
+
+    def has_line_of_sight(self, src_node: Node, dst_node: Node) -> bool:
+        x1, y1, z1 = src_node.i, src_node.j, src_node.k
+        x2, y2, z2 = dst_node.i, dst_node.j, dst_node.k
+
+        if (x2 > x1):
+            xs = 1
+            dx = x2 - x1
+        else:
+            xs = -1
+            dx = x1 - x2
+
+        if (y2 > y1):
+            ys = 1
+            dy = y2 - y1
+        else:
+            ys = -1
+            dy = y1 - y2
+
+        if (z2 > z1):
+            zs = 1
+            dz = z2 - z1
+        else:
+            zs = -1
+            dz = z1 - z2
+
+        if (dx >= dy and dx >= dz):
+            p1 = 2 * dy - dx
+            p2 = 2 * dz - dx
+            while (x1 != x2):
+                x1 += xs
+                if (p1 >= 0):
+                    y1 += ys
+                    p1 -= 2 * dx
+                if (p2 >= 0):
+                    z1 += zs
+                    p2 -= 2 * dx
+                p1 += 2 * dy
+                p2 += 2 * dz
+                if self.grids[x1, y1, z1].is_obstacle: 
+                    return False
+
+        elif (dy >= dx and dy >= dz):
+            p1 = 2 * dx - dy
+            p2 = 2 * dz - dy
+            while (y1 != y2):
+                y1 += ys
+                if (p1 >= 0):
+                    x1 += xs
+                    p1 -= 2 * dy
+                if (p2 >= 0):
+                    z1 += zs
+                    p2 -= 2 * dy
+                p1 += 2 * dx
+                p2 += 2 * dz
+                if self.grids[x1, y1, z1].is_obstacle:  
+                    return False
+        else:
+            p1 = 2 * dy - dz
+            p2 = 2 * dx - dz
+            while (z1 != z2):
+                z1 += zs
+                if (p1 >= 0):
+                    y1 += ys
+                    p1 -= 2 * dz
+                if (p2 >= 0):
+                    x1 += xs
+                    p2 -= 2 * dz
+                p1 += 2 * dy
+                p2 += 2 * dx
+                if self.grids[x1, y1, z1].is_obstacle:  
+                    return False
+        return True
+    
+    def get_smoothed_path(self) -> List[Node]:
+        dst_node = self.grids.goal_node
+        src_node = self.grids.start_node    
+        
+        smoothed_node_list = []
+        finder: Node = dst_node
+        src_node.parent = None  
+        smoothed_node_list.append(finder)
+        tmp_node: Node = finder.parent
+
+        while finder != src_node:
+            if tmp_node.parent == None or finder == None:
+                return []
+            while self.has_line_of_sight(finder, tmp_node.parent):
+                tmp_node = tmp_node.parent
+                if tmp_node == src_node:
+                    break
+            if tmp_node == src_node:
+                break
+            finder = tmp_node
+            tmp_node = finder.parent
+            smoothed_node_list.append(finder)
+        smoothed_node_list.append(src_node)
+        return smoothed_node_list   
+    
+    
 class Direction:    
     def __init__(self, dir_i: int, dir_j: int, dir_k: int) -> None:
         self.dir_i: int = dir_i 

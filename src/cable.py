@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Set
 from OCC.Core.gp import gp_Pnt
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Core.BRepClass3d import BRepClass3d_SolidClassifier    
@@ -17,9 +17,9 @@ class Cable:
     def __init__(self) -> None:
         self.start_terminal: Optional[Node] = None
         self.goal_terminal: Optional[Node] = None
+        self.intermidiate_terminals: Optional[Node] = []
         self.spline: Optional[Spline] = None
-        self.visited_nodes = [] 
-        self.classifier: Optional[BRepClass3d_SolidClassifier] = None
+        self.splines_pnts: List[gp_Pnt] = []
         
     
     def set_start_terminal(self, start_pnt: gp_Pnt, start_vec: Tuple[int, int, int],grids: Grids3D) -> None:
@@ -48,7 +48,7 @@ class Cable:
     
     def set_spline(self, diameter: float, grids: Grids3D) -> None:
         pathfinder: GridAlgorithm = JumpPointSearch(grids = grids)
-    
+
         if pathfinder.search():
             path_nodes = pathfinder.get_path_nodes()
             path_pnts = [node.center_pnt for node in path_nodes]
@@ -56,8 +56,38 @@ class Cable:
         
         return 
     
+    def set_intermediate_pnts(self, pnts: List[gp_Pnt], grids: Grids3D, diameter: float) -> None:   
+        pnts.remove(pnts[1])    
+        #pnts.remove(pnts[-1])   
+
+        for pnt in pnts:
+            gap: float = grids[0, 0, 0].gap
+            i: int = int((pnt.X() - grids.corner_min.X()) / gap)  
+            j: int = int((pnt.Y() - grids.corner_min.Y()) / gap)
+            k: int = int((pnt.Z() - grids.corner_min.Z()) / gap)
+            node = grids[i, j, k]
+            node.is_obstacle = False
+            self.intermidiate_terminals.append(node)    
+            
+        for idx in range(len(self.intermidiate_terminals) - 1):
+            grids.set_start_node(self.intermidiate_terminals[idx])
+            grids.set_goal_node(self.intermidiate_terminals[idx + 1])   
+            
+            pathfinder: GridAlgorithm = JumpPointSearch(grids = grids)  
+            if pathfinder.search(): 
+                path_nodes = pathfinder.get_smoothed_path()
+                path_pnts = [node.center_pnt for node in path_nodes]
+                print(f"length of path node: {len(path_pnts)}")
+                for pnt in path_pnts:
+                    if pnt not in self.splines_pnts:    
+                        self.splines_pnts.append(pnt)
+            
+        intermidiate_pnts = [node.center_pnt for node in self.intermidiate_terminals]   
+        #self.spline = Spline(path_pnts=intermidiate_pnts, diameter=diameter)s
+        return
+    
     def cable_optimization(self, fused_shape: TopoDS_Shape, grids: Grids3D) -> None:
-        self.fused_shape = fused_shape  
+        self.fused_shape = fused_shape
         self.grids = grids
         acor = ACOR(f = self.esitimate, dim=len(self.spline.intermediate_pnts) * 3, ub = self.spline.diameter * 2, lb=(-self.spline.diameter)*2, max_fes = 2000) 
         sols = acor.optimize()

@@ -113,7 +113,6 @@ class ShapeToMeshConvertor:
         return
 
 
-import random
 
 from OCC.Core.gp import gp_Pnt
 from OCC.Core.STEPControl import STEPControl_Writer

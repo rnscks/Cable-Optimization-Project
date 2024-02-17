@@ -180,6 +180,7 @@ class Grids3D(Box):
             self.start_node.is_start_node = False
         self.start_node = self.nodes_map[i][j][k]
         self.start_node.is_start_node = True
+        self.start_node.is_obstacle = False 
         return  
     
     @dispatch(Node)
@@ -188,6 +189,7 @@ class Grids3D(Box):
             self.start_node.is_start_node = False
         self.start_node = node
         node.is_start_node = True
+        node.is_obstacle = False
         return
     
     @dispatch(int, int, int)
@@ -196,6 +198,7 @@ class Grids3D(Box):
             self.goal_node.is_goal_node = False
         self.goal_node = self.nodes_map[i][j][k]
         self.goal_node.is_goal_node = True
+        self.goal_node.is_obstacle = False
         return
     
     @dispatch(Node)
@@ -204,6 +207,7 @@ class Grids3D(Box):
             self.goal_node.is_goal_node = False
         self.goal_node = node
         node.is_goal_node = True
+        node.is_obstacle = False    
         return  
     
     def __iter__(self):

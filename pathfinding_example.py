@@ -1,47 +1,50 @@
-from typing import List
+from OCC.Core.TopoDS import TopoDS_Shape    
 from OCC.Core.gp import gp_Pnt
 from OCC.Display.SimpleGui import init_display  
+from OCC.Core.Quantity import Quantity_Color, Quantity_NOC_WHITE
+from OCC.Display.SimpleGui import init_display
 
-from src.brep.brep_util import STPFileReader
-from src.grids_util import Voxelization
-from src.grids.grids3d import Grids3D, Node
-from src.pathfinding import JumpPointSearch
+from src.cabinet import Cabinet
+from src.pathfinding import JumpPointSearch, AstarAlgorithmOp, GridAlgorithm, JumpPointSearchTheta
 from src.line.spline import Spline
 
-def display_pathfinding():
-    cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
-    grids = Grids3D(corner_max=gp_Pnt(200, 200, 200),
-            corner_min=gp_Pnt(-200, -200, -200),
-            map_size=30)
-    Voxelization.voxelize(grids=grids, shape=cabinet_shape) 
 
-    map_size: int = grids.map_size  
-    grids.set_goal_node(grids[map_size - 1, map_size - 1, map_size - 1])
-    grids.set_start_node(grids[0, 0, 0])    
-    jps = JumpPointSearch(grids=grids)
-    
-    path_pnts: List[gp_Pnt] = []
-    if jps.search2():
-        path_nodes: List[Node] = jps.get_path_nodes()
-        
-        for node in path_nodes:
-            path_pnts.append(node.center_pnt)
-            
+cabinet = Cabinet()
+grids = cabinet.grids   
+map_size = grids.map_size   
+print(cabinet.__doc__)
+start_node = grids[10, 25, 25]
+goal_node = grids[15, 10, 29]        
+grids.set_start_node(start_node)    
+grids.set_goal_node(goal_node)  
 
-    display, start_display, _, _ = init_display()
-    for node in grids:
-        if node.is_obstacle:
-            display.DisplayShape(node.get_box_shape())  
-        if node.is_start_node:
-            display.DisplayShape(node.get_box_shape(), color="green")
-        if node.is_goal_node:
-            display.DisplayShape(node.get_box_shape(), color="blue")    
-    
+jps: GridAlgorithm = JumpPointSearchTheta(cabinet.grids)
+display, start_display, _, _ = init_display()
+display.View.SetBgGradientColors(
+    Quantity_Color(Quantity_NOC_WHITE),
+    Quantity_Color(Quantity_NOC_WHITE),
+    2,
+    True,
+)
+
+display.DisplayShape(start_node.get_box_shape(), color="green")
+display.DisplayShape(goal_node.get_box_shape(), color="green")    
+if jps.search():
+    path_nodes = jps.get_path_nodes()
+    # path_nodes = jps.get_smoothed_path_nodes()
+    path_pnts =  []
     for node in path_nodes:
-        display.DisplayShape(node.get_box_shape(), color="red") 
+        display.DisplayShape(node.get_box_shape(), color="blue")
+        path_pnts.append(node.center_pnt) 
     spline = Spline(path_pnts=path_pnts, diameter=1)
-    if spline.spline_shape:
-        display.DisplayShape(spline.spline_shape, color="red")
-    start_display()
+    
+    if spline.spline_shape is not None:
+        display.DisplayShape(spline.spline_shape, color="blue")  
+else:
+    print("No path found")
 
-display_pathfinding()
+for node in cabinet.grids:
+    if node.is_obstacle:
+        display.DisplayShape(node.get_box_shape(), color="black")
+
+start_display()

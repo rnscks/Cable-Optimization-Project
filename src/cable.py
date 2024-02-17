@@ -75,7 +75,7 @@ class Cable:
             
             pathfinder: GridAlgorithm = JumpPointSearch(grids = grids)  
             if pathfinder.search(): 
-                path_nodes = pathfinder.get_smoothed_path()
+                path_nodes = pathfinder.get_smoothed_path_nodes()
                 path_pnts = [node.center_pnt for node in path_nodes]
                 print(f"length of path node: {len(path_pnts)}")
                 for pnt in path_pnts:

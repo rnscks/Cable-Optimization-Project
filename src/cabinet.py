@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from OCC.Core.gp import gp_Pnt
 from OCC.Core.TopoDS import TopoDS_Shape
 from openpyxl import load_workbook  
@@ -11,19 +11,26 @@ from src.cable import Cable
 
 
 class Cabinet:
+
     def __init__(self) -> None:
         self.grids: Grids3D = None  
-        self.cabinet_shape: TopoDS_Shape = None   
         self.cable_name_list: List[str] = self.get_cable_name_list()
-        
-        self.cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
-        self.grids = Grids3D(corner_max=gp_Pnt(200, 200, 200),
+        self.grids = Grids3D(
+                corner_max=gp_Pnt(200, 200, 200),
                 corner_min=gp_Pnt(-200, -200, -200),
                 map_size=30)
-        Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape) 
-        self.cables: List[Cable] = [self.get_cable(self.cable_name_list[0])]    
+        self.grids.load_grid_map("cabinet_grid_map.npy")
+        self.cables: Optional[List[Cable]] = None   
+        # cabinet brep model을 voxel로 대체
+        # self.cabinet_shape: TopoDS_Shape = None   
+        # self.cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
+        # Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape) 
         
-    
+        
+    def init_cables(self) -> None:  
+        self.cables = [self.get_cable(self.cable_name_list[0])]    
+        return 
+
     def get_cable(self, cable_name: str) -> Cable:
         cable_data = self.get_cable_data(cable_name)
         start_pnt, end_pnt = cable_data['start_point'], cable_data['end_point']

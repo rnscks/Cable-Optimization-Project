@@ -109,13 +109,14 @@ class SplineBuilder:
     
     @classmethod    
     def get_spline_shape(cls, pnt_list: List[gp_Pnt], diameter: float) -> Optional[TopoDS_Shell]:
-        pnt_list = cls.optimize_path_using_previous_point(pnts=pnt_list, threshold=diameter * 0.5)
+        pnt_list = cls.remove_duplicate_points(pnts=pnt_list)
+
         if len(pnt_list) < 2:   
             print(ValueError("Spline: pnt_list should have at least 2 points."))
             return None
         
         if len(pnt_list) == 2:
-            return cls.get_pipe_shape(pnt_list, diameter)   
+            cls.add_middle_pnt(pnt_list)    
         
         tcol_pnt = TColgp_HArray1OfPnt(1, len(pnt_list))
         tcol_vec = TColgp_Array1OfVec(1, len(pnt_list))
@@ -156,6 +157,17 @@ class SplineBuilder:
     
     @classmethod
     def get_pipe_shape(cls, pnt_list: List[gp_Pnt], diameter: float) -> TopoDS_Shell:
+        """
+
+        Args:
+            pnt_list (List[gp_Pnt]): _description_
+            diameter (float): _description_
+
+        Returns:
+            TopoDS_Shell: _description_
+        description:    
+            Spline Points가 2개일 경우 Pipe Shape을 반환    
+        """
         try:
             pnt1 = pnt_list[0]  
             pnt2 = pnt_list[-1]
@@ -174,3 +186,14 @@ class SplineBuilder:
             print("Spline Builder: RuntimeError[Pipe Shape]")
             return  
         
+    @classmethod
+    def add_middle_pnt(cls, pnt_list: List[gp_Pnt]) -> None:
+        start_pnt = pnt_list[0]
+        goal_pnt = pnt_list[-1]
+        
+        middle_pnt = gp_Pnt((start_pnt.X() + goal_pnt.X()) * 0.4,    
+                            (start_pnt.Y() + goal_pnt.Y()) * 0.3,    
+                            (start_pnt.Z() + goal_pnt.Z()) * 0.5)   
+        
+        pnt_list.insert(1, middle_pnt)  
+        return

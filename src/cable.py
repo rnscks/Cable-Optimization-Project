@@ -8,7 +8,7 @@ from OCC.Core.TopAbs import TopAbs_IN
 from src.grids.grids3d import Node, Grids3D
 from src.grids_util import CollisionChecker
 from src.line.spline import Spline
-from src.pathfinding import JumpPointSearch, AstarAlgorithmOp, GridAlgorithm
+from src.pathfinding import JumpPointSearch, AstarAlgorithmOp, GridAlgorithm, JumpPointSearchTheta
 from src.brep.brep_util import ShapeToMeshConvertor
 from src.optimizer.continuous_optimizer import ACOR
 
@@ -20,6 +20,8 @@ class Cable:
         self.intermidiate_terminals: Optional[Node] = []
         self.spline: Optional[Spline] = None
         self.splines_pnts: List[gp_Pnt] = []
+        self.splines: Optional[List[Spline]] = []
+        self.path_nodes: List[Node] = []
         
     
     def set_start_terminal(self, start_pnt: gp_Pnt, start_vec: Tuple[int, int, int],grids: Grids3D) -> None:
@@ -47,7 +49,7 @@ class Cable:
         return
     
     def set_spline(self, diameter: float, grids: Grids3D) -> None:
-        pathfinder: GridAlgorithm = JumpPointSearch(grids = grids)
+        pathfinder: GridAlgorithm = JumpPointSearchTheta(grids = grids)
 
         if pathfinder.search():
             path_nodes = pathfinder.get_path_nodes()
@@ -57,9 +59,6 @@ class Cable:
         return 
     
     def set_intermediate_pnts(self, pnts: List[gp_Pnt], grids: Grids3D, diameter: float) -> None:   
-        pnts.remove(pnts[1])    
-        #pnts.remove(pnts[-1])   
-
         for pnt in pnts:
             gap: float = grids[0, 0, 0].gap
             i: int = int((pnt.X() - grids.corner_min.X()) / gap)  
@@ -69,21 +68,19 @@ class Cable:
             node.is_obstacle = False
             self.intermidiate_terminals.append(node)    
             
-        for idx in range(len(self.intermidiate_terminals) - 1):
-            grids.set_start_node(self.intermidiate_terminals[idx])
-            grids.set_goal_node(self.intermidiate_terminals[idx + 1])   
+        cable_nodes = [self.start_terminal] + self.intermidiate_terminals + [self.goal_terminal]    
+        for i in range(len(cable_nodes) - 1):   
+            grids.set_start_node(cable_nodes[i])
+            grids.set_goal_node(cable_nodes[i + 1])   
             
-            pathfinder: GridAlgorithm = JumpPointSearch(grids = grids)  
+            pathfinder: GridAlgorithm = JumpPointSearchTheta(grids = grids)  
             if pathfinder.search(): 
-                path_nodes = pathfinder.get_smoothed_path_nodes()
+                path_nodes = pathfinder.get_path_nodes()
                 path_pnts = [node.center_pnt for node in path_nodes]
-                print(f"length of path node: {len(path_pnts)}")
                 for pnt in path_pnts:
-                    if pnt not in self.splines_pnts:    
-                        self.splines_pnts.append(pnt)
-            
-        intermidiate_pnts = [node.center_pnt for node in self.intermidiate_terminals]   
-        #self.spline = Spline(path_pnts=intermidiate_pnts, diameter=diameter)s
+                    self.splines_pnts.append(pnt)
+        
+        self.spline = Spline(path_pnts=self.splines_pnts, diameter=diameter)
         return
     
     def cable_optimization(self, fused_shape: TopoDS_Shape, grids: Grids3D) -> None:

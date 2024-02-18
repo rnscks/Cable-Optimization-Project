@@ -25,10 +25,9 @@ class Cabinet:
             self.cabinet_shape: TopoDS_Shape = None   
             self.cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
             Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape)         
+            
+        self.cables = [self.get_cable(cable_name) for cable_name in self.cable_name_list]     
         
-    def init_cables(self) -> None:  
-        self.cables = [self.get_cable(self.cable_name_list[0])]    
-        return 
 
     def get_cable(self, cable_name: str) -> Cable:
         cable_data = self.get_cable_data(cable_name)

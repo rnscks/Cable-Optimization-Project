@@ -109,25 +109,24 @@ class GridAlgorithm:
     def get_smoothed_path_nodes(self) -> List[Node]:
         dst_node = self.grids.goal_node
         src_node = self.grids.start_node    
+        src_node.parent = None  
         
         smoothed_node_list = []
         finder: Node = dst_node
-        src_node.parent = None  
         smoothed_node_list.append(finder)
         tmp_node: Node = finder.parent
 
-        while finder != src_node:
-            if tmp_node.parent == None or finder == None:
-                return []
+        while tmp_node != src_node:
             while self.has_line_of_sight(finder, tmp_node.parent):
                 tmp_node = tmp_node.parent
-                if tmp_node == src_node:
+                if tmp_node == src_node: 
                     break
-            if tmp_node == src_node:
-                break
             finder = tmp_node
+            if tmp_node == src_node:
+                break   
             tmp_node = finder.parent
             smoothed_node_list.append(finder)
+        
         smoothed_node_list.append(src_node)
         return smoothed_node_list   
     
@@ -294,7 +293,6 @@ class JumpPointSearch(GridAlgorithm):
                     nxt_node.f = ng + nxt_node.center_pnt.Distance(self.goal_node.center_pnt)
                     nxt_node.parent = cur_node
                     heapq.heappush(self.open_list, nxt_node)
-                
                 return
             
             nxt_node.parent = cur_node
@@ -317,8 +315,9 @@ class JumpPointSearch(GridAlgorithm):
             if nxt_node in self.close_list:
                 return None
             
-            if nxt_node.is_goal_node == True:
+            if nxt_node.is_goal_node == True or self.has_forced_neighbor(nxt_node, dir_i, dir_j, dir_k):
                 ng = cur_node.g + cur_node.center_pnt.Distance(nxt_node.center_pnt)
+                    
                 if nxt_node.parent is None or ng < nxt_node.g:
                     nxt_node.g = ng
                     nxt_node.f = ng + nxt_node.center_pnt.Distance(self.goal_node.center_pnt)
@@ -349,14 +348,15 @@ class JumpPointSearch(GridAlgorithm):
             if nxt_node in self.close_list:
                 return
             
-            if nxt_node.is_goal_node == True:
+            if nxt_node.is_goal_node == True or self.has_forced_neighbor(nxt_node, dir_i, dir_j, dir_k):
                 ng = cur_node.g + cur_node.center_pnt.Distance(nxt_node.center_pnt)
+                    
                 if nxt_node.parent is None or ng < nxt_node.g:
                     nxt_node.g = ng
                     nxt_node.f = ng + nxt_node.center_pnt.Distance(self.goal_node.center_pnt)
                     nxt_node.parent = cur_node
                     heapq.heappush(self.open_list, nxt_node)
-                return nxt_node
+                return
             
             
             self.jump_orthogonal(nxt_node, dir_i, 0, 0)

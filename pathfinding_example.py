@@ -9,7 +9,7 @@ from src.line.spline import Spline
 cabinet = Cabinet("cabinet_grid_map.npy")
 grids = cabinet.grids   
 map_size = grids.map_size   
-print(cabinet.__doc__)
+
 start_node = grids[10, 25, 25]
 goal_node = grids[15, 10, 29]        
 grids.set_start_node(start_node)    

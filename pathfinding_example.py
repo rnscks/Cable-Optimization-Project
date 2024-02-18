@@ -1,5 +1,3 @@
-from OCC.Core.TopoDS import TopoDS_Shape    
-from OCC.Core.gp import gp_Pnt
 from OCC.Display.SimpleGui import init_display  
 from OCC.Core.Quantity import Quantity_Color, Quantity_NOC_WHITE
 from OCC.Display.SimpleGui import init_display
@@ -8,8 +6,7 @@ from src.cabinet import Cabinet
 from src.pathfinding import JumpPointSearch, AstarAlgorithmOp, GridAlgorithm, JumpPointSearchTheta
 from src.line.spline import Spline
 
-
-cabinet = Cabinet()
+cabinet = Cabinet("cabinet_grid_map.npy")
 grids = cabinet.grids   
 map_size = grids.map_size   
 print(cabinet.__doc__)

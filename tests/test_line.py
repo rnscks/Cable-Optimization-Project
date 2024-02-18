@@ -1,7 +1,7 @@
 import unittest
 from OCC.Core.gp import gp_Pnt
 
-from src.cable.line.spline import Spline
+from src.line.spline import Spline
 
 class TestSpline(unittest.TestCase):
     def setUp(self):

@@ -1,3 +1,4 @@
+import os
 from OCC.Core.gp import gp_Pnt
 from OCC.Core.TopoDS import TopoDS_Shape
 from OCC.Display.SimpleGui import init_display
@@ -26,7 +27,5 @@ def display_voxelization():
             
     display.FitAll()
     start_display()
-
-
 
 display_voxelization()

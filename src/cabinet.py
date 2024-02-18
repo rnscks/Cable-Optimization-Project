@@ -11,21 +11,20 @@ from src.cable import Cable
 
 
 class Cabinet:
-
-    def __init__(self) -> None:
-        self.grids: Grids3D = None  
-        self.cable_name_list: List[str] = self.get_cable_name_list()
+    def __init__(self, grids_np_file: str = "") -> None:            
         self.grids = Grids3D(
-                corner_max=gp_Pnt(200, 200, 200),
-                corner_min=gp_Pnt(-200, -200, -200),
-                map_size=30)
-        self.grids.load_grid_map("cabinet_grid_map.npy")
+                    corner_max=gp_Pnt(200, 200, 200),
+                    corner_min=gp_Pnt(-200, -200, -200),
+                    map_size=30)
+        self.cable_name_list: List[str] = self.get_cable_name_list()
         self.cables: Optional[List[Cable]] = None   
-        # cabinet brep model을 voxel로 대체
-        # self.cabinet_shape: TopoDS_Shape = None   
-        # self.cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
-        # Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape) 
-        
+            
+        if os.path.isfile(grids_np_file):   
+            self.grids.load_grid_map(grids_np_file)  
+        else:
+            self.cabinet_shape: TopoDS_Shape = None   
+            self.cabinet_shape = STPFileReader.read_stp_file_by_occ("CABINET.step")  
+            Voxelization.voxelize(grids=self.grids, shape=self.cabinet_shape)         
         
     def init_cables(self) -> None:  
         self.cables = [self.get_cable(self.cable_name_list[0])]    

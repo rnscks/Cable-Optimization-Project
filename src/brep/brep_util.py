@@ -24,6 +24,8 @@ class STPFileReader:
     def read_stp_file_by_occ(cls, file_name:str) -> TopoDS_Compound:
         dir_name = "./brep_model"
         file_path = os.path.join(dir_name, file_name)  
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"STPFileReader: STP 파일이 존재하지 않습니다: {file_path}")
         step_reader = STEPControl_Reader()
         step_reader.ReadFile(file_path)
         step_reader.TransferRoots()  
